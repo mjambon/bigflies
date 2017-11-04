@@ -1,0 +1,68 @@
+#! /usr/bin/env python3
+
+"""Estimate number of lines in files until the exact count is known."""
+
+import os
+import stat
+import sys
+import time
+
+def get_file_size(filename):
+    return os.stat(filename).st_size
+
+def get_data_size(filenames):
+    sizes = map(get_file_size, filenames)
+    total_size = sum(sizes)
+    return total_size
+
+def format_count(line_count):
+    return '{:,}'.format(line_count)
+
+def print_count(line_count):
+    print(format_count(line_count))
+
+class ProgressLine():
+    """Print, erase, and update an estimated line count."""
+
+    def __init__(self, total_byte_count):
+        self.displayed = False
+        self.total_byte_count = total_byte_count
+
+    def clear(self):
+        if self.displayed:
+            print('\r\x1B[K', end='')
+
+    def print_progress(self, line_count, byte_count):
+        progress = byte_count / self.total_byte_count
+        est_line_count = int(line_count/progress)
+        s = '{a:3.0f}% estimate: {b} lines'.format(
+            a = 100 * progress,
+            b = format_count(est_line_count)
+        )
+        self.clear()
+        print(s, end='')
+        sys.stdout.flush()
+        self.displayed = True
+
+def count_lines(filenames, total_size):
+    line_count = 0
+    byte_count = 0
+    last_progress_update = 0
+    pl = ProgressLine(total_size)
+    for filename in filenames:
+        with open(filename) as infile:
+            for line in infile:
+                line_count += 1
+                byte_count += len(line)
+                if line_count - last_progress_update >= 10000:
+                    pl.print_progress(line_count, byte_count)
+                    last_progress_update = line_count
+    pl.clear()
+    print_count(line_count)
+
+def main():
+    filenames = sys.argv[1:]
+    data_size = get_data_size(filenames)
+    count_lines(filenames, data_size)
+
+main()
