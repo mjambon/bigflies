@@ -45,7 +45,8 @@ class ProgressLine():
         sys.stdout.flush()
         self.displayed = True
 
-def count_lines(filenames):
+def count_lines(filenames, debug):
+    update_interval = 10000 if not debug else 10
     total_size = get_data_size(filenames)
     line_count = 0
     byte_count = 0
@@ -56,9 +57,11 @@ def count_lines(filenames):
             for line in infile:
                 line_count += 1
                 byte_count += len(line)
-                if line_count - last_progress_update >= 10000:
+                if line_count - last_progress_update >= update_interval:
                     pl.print_progress(line_count, byte_count)
                     last_progress_update = line_count
+                    if debug:
+                        time.sleep(0.2)
     pl.clear()
     print_count(line_count)
 
@@ -67,7 +70,7 @@ Count lines in large files, showing early estimates and a progress meter
 as follows:
 
   $ wcl bigfile1.dat bigfile2.dat
-  11% estimate: 443,486,924 lines
+   11% estimate: 443,486,924 lines
 
 Eventually, the exact line count is displayed, as follows:
 
@@ -85,15 +88,21 @@ def parse_args():
         description=description
     )
     parser.add_argument(
-        "files",
-        metavar="file",
-        nargs="*"
+        'files',
+        metavar='file',
+        nargs='*'
+    )
+    parser.add_argument(
+        '-d',
+        '--debug',
+        action='store_true',
+        help='slow things down for testing purposes'
     )
     args = parser.parse_args()
-    return args.files
+    return (args.files, args.debug)
 
 def main():
-    filenames = parse_args()
-    count_lines(filenames)
+    filenames, debug = parse_args()
+    count_lines(filenames, debug)
 
 main()
