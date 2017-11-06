@@ -2,10 +2,15 @@
 
 """Estimate number of lines in files until the exact count is known."""
 
+import sys
+
+# Python >= 3.2 is required for argparse.
+if sys.version_info < (3, 2):
+    sys.exit("Python 3.2 or later is required.")
+
 import argparse
 import os
 import stat
-import sys
 import time
 
 def get_file_size(filename):
