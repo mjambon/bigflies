@@ -6,36 +6,44 @@ import sys
 
 # Python >= 3.2 is required for argparse.
 if sys.version_info < (3, 2):
-    sys.exit("Python 3.2 or later is required.")
+    sys.exit('Python 3.2 or later is required.')
 
 import argparse
 import os
 import stat
 import time
 
+
 def get_file_size(filename):
     return os.stat(filename).st_size
+
 
 def get_data_size(filenames):
     sizes = map(get_file_size, filenames)
     total_size = sum(sizes)
     return total_size
 
+
 def format_count(line_count):
     return '{:,}'.format(line_count)
+
 
 def print_count(line_count):
     print(format_count(line_count))
 
+
 class ProgressLine():
     """Print, erase, and update an estimated line count."""
-
     def __init__(self, total_byte_count):
         self.displayed = False
         self.total_byte_count = total_byte_count
 
     def clear(self):
+        """Clear the current line."""
         if self.displayed:
+            # Go the beginning of the line (carriage return)
+            # and clear everything to the right of the cursor (ESC [ K).
+            # See e.g. http://wiki.bash-hackers.org/scripting/terminalcodes
             print('\r\x1B[K', end='')
 
     def print_progress(self, line_count, byte_count):
@@ -49,6 +57,7 @@ class ProgressLine():
         print(s, end='')
         sys.stdout.flush()
         self.displayed = True
+
 
 def count_lines(filenames, debug):
     update_interval = 10000 if not debug else 10
@@ -70,6 +79,7 @@ def count_lines(filenames, debug):
     pl.clear()
     print_count(line_count)
 
+
 description = '''\
 Count lines in large files, showing early estimates and a progress meter
 as follows:
@@ -86,6 +96,7 @@ Eventually, the exact line count is displayed, as follows:
 `wcl` is meant for interactive use as an alternative to `wc -l`.
 See also `pv` for a general-purpose progress indicator.
 '''
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -106,8 +117,10 @@ def parse_args():
     args = parser.parse_args()
     return (args.files, args.debug)
 
+
 def main():
     filenames, debug = parse_args()
     count_lines(filenames, debug)
+
 
 main()
